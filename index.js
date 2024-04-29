@@ -17,16 +17,26 @@ const pool = new Pool({
 //Rotas dos Bruxos
 app.get('/bruxo', async (req, res) => {
     try {
-        const response = await pool.query('SELECT * FROM bruxo');
-        res.status(200).json({
-            totalBruxos: response.rowCount,
-            bruxos: response.rows
-        })
+        const { name } = req.query;
+        if (name) {
+            const response = await pool.query('SELECT * FROM bruxo WHERE nome = $1', [name]);
+            res.status(200).json({
+                message: 'Bruxo encontrado com sucesso!',
+                bruxo: response.rows
+            });
+        } else {
+            const response = await pool.query('SELECT * FROM bruxo');
+            res.status(200).json({
+                totalBruxos: response.rowCount,
+                bruxos: response.rows
+            });
+        }
     } catch (error) {
-        console.log('Erro ao capturar bruxos!', error);
-        res.status(500).send('Erro ao capturar bruxos!')
+        console.error('Erro ao capturar bruxos!', error);
+        res.status(500).send('Erro ao capturar bruxos!');
     }
 });
+
 
 app.get('/bruxo/:id', async (req, res) => {
     try {
@@ -46,14 +56,18 @@ app.post('/bruxo', async (req, res) => {
     try {
         const { nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono } = req.body;
         // Condições para adicionar um bruxo
-        const casas = ['puro', 'mestiço', 'trouxa']
-        if(!casa_hogwarts.includes(casas)) {
-            res.status(500).send({message: `Casa ${casa_hogwarts} inválida!`})
-        } else if (status_sangue !== 'puro' && status_sangue !== 'mestico' && status_sangue !== 'trouxa') {
-            res.status(500).send({message: `Status de sangue ${status_sangue} inválido!`})
+        const sangue = ['Puro', 'Mestiço', 'Trouxa']
+        const casas = ['Grifinoria', 'Sonserina', 'Corvinal', 'Lufa-lufa']
+
+        if (!sangue.includes(status_sangue)) {
+            res.status(400).send({ message: `Sangue ${status_sangue} inválido!` })
+        } else if(nome == "" || idade == "" || casa_hogwarts == "" || habilidade_especial == "" || status_sangue == "") {
+            res.status(400).send({ message: 'Preencha todos os campos!'})
+        } else if (!casas.includes(casa_hogwarts)) {
+            res.status(400).send({ message: `Casa ${casa_hogwarts} inválido!` })
         } else {
             await pool.query('INSERT INTO bruxo (nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono) VALUES ($1, $2, $3, $4, $5, $6)', [nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono]);
-            res.status(201).send({message: `Bruxo ${nome} criado com sucesso!`})
+            res.status(201).send({ message: `Bruxo ${nome} criado com sucesso!` })
         }
     } catch (error) {
         console.log('Erro ao adicionar bruxo!', error);
@@ -76,10 +90,91 @@ app.delete('/bruxo/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query('DELETE FROM bruxo WHERE id = $1', [id])
-        res.status(200).send({message: `Bruxo com ID ${id} excluido com sucesso!`})
+        res.status(200).send({ message: `Bruxo com ID ${id} excluido com sucesso!` })
     } catch (error) {
         console.log('Erro ao excluir bruxo!', error);
         res.status(500).send('Erro ao excluir bruxos!')
+    }
+})
+
+//Rotas de Varihas
+app.get('/varinha', async (req, res) => {
+    try {
+        const { data_fabricacao } = req.query;
+        if (data_fabricacao) {
+            const response = await pool.query('SELECT * FROM varinha WHERE data_fabricacao = $1', [data_fabricacao]);
+            res.status(200).json({
+                message: 'varinha encontrado com sucesso!',
+                varinha: response.rows
+            });
+        } else {
+            const response = await pool.query('SELECT * FROM varinha');
+            res.status(200).json({
+                totalvarinhas: response.rowCount,
+                varinhas: response.rows
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao capturar varinhas!', error);
+        res.status(500).send('Erro ao capturar varinhas!');
+    }
+});
+
+
+app.get('/varinha/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const response = await pool.query('SELECT * FROM varinha WHERE id = $1', [id]);
+        res.status(200).json({
+            message: `varinha com o id ${id} encontrado!`,
+            varinha: response.rows
+        })
+    } catch (error) {
+        console.log(`Erro ao capturar varinha por ID!`, error);
+        res.status(500).send('Erro ao capturar varinha por ID!')
+    }
+});
+
+app.post('/varinha', async (req, res) => {
+    try {
+        const { material, comprimento, nucleo, data_fabricacao } = req.body;
+        if(material == "" || comprimento == "" || nucleo == "" || data_fabricacao == "") {
+            res.status(400).send({
+                message: 'Preencha todos os campos necessarios!'
+            })
+        } else {
+            const response = await pool.query('INSERT INTO varinha (material, comprimento, nucleo, data_fabricacao) VALUES ($1, $2, $3, $4)', [material, comprimento, nucleo, data_fabricacao]);
+            res.status(201).send({
+                message: 'Varinha adicionada!',
+                varinha: response.rows
+            })
+        }
+    } catch (error) {
+        console.log(`Erro ao adicionar varinha!`, error);
+        res.status(500).send('Erro ao adicionar varinha!')
+    }
+})
+
+app.put('/varinha/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { material, comprimento, nucleo, data_fabricacao } = req.body;
+        await pool.query('UPDATE varinha SET material = $1, comprimento = $2, nucleo = $3, data_fabricacao = $4 WHERE id = $5', [material, comprimento, nucleo, data_fabricacao, id])
+        res.status(200).send({message: 'Varinha editada com sucesso!'})
+    } catch (error) {
+        console.log('Erro ao editar varinha!', error);
+        res.status(500).send('Erro ao editar varinhas!')
+    }
+})
+
+app.delete('/varinha/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM varinha WHERE id = $1', [id])
+        res.status(200).send({ message: `varinha com ID ${id} excluido com sucesso!` })
+    } catch (error) {
+        console.log('Erro ao excluir varinha!', error);
+        res.status(500).send('Erro ao excluir varinhas!')
     }
 })
 

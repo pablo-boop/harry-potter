@@ -21,3 +21,5 @@ CREATE TABLE varinha (
 );
 
     INSERT INTO bruxo (nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono) VALUES ('Harry Potter', 34, 'Grifnoria', 'Prodigio da feiticaria', 'Mestico', 'Corca');
+
+    INSERT INTO varinha (material, comprimento, nucleo, data_fabricacao) VALUES ('Madeira de Teixo', 30, 'Pea da cauda da Fenix', '1991-07-31');
