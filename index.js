@@ -80,6 +80,7 @@ app.put('/bruxo/:id', async (req, res) => {
         const { id } = req.params;
         const { nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono } = req.body;
         await pool.query('UPDATE bruxo SET nome = $1, idade = $2, casa_hogwarts = $3, habilidade_especial = $4, status_sangue = $5, patrono = $6 WHERE id = $7', [nome, idade, casa_hogwarts, habilidade_especial, status_sangue, patrono, id])
+        res.status(200).send({message: 'Bruxo editado com sucesso!'})
     } catch (error) {
         console.log('Erro ao editar bruxo!', error);
         res.status(500).send('Erro ao editar bruxos!')
@@ -100,9 +101,9 @@ app.delete('/bruxo/:id', async (req, res) => {
 //Rotas de Varihas
 app.get('/varinha', async (req, res) => {
     try {
-        const { data_fabricacao } = req.query;
-        if (data_fabricacao) {
-            const response = await pool.query('SELECT * FROM varinha WHERE data_fabricacao = $1', [data_fabricacao]);
+        const { material } = req.query;
+        if (material) {
+            const response = await pool.query('SELECT * FROM varinha WHERE material = $1', [material]);
             res.status(200).json({
                 message: 'varinha encontrado com sucesso!',
                 varinha: response.rows
